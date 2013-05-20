@@ -10,7 +10,7 @@ See license.txt for more information.
 Requirements
 ------------
 The build requirements are:
-  * A C/C++ compiler toolkit, e.g. the `GNU Compiler Collection 
+  * A C compiler, from e.g. the `GNU Compiler Collection 
     <http://gcc.gnu.org/>`_ (GCC)
 
 Obtaining lbm-d3q19
@@ -23,7 +23,7 @@ copy, execute::
 
 Build and run instructions
 --------------------------
-lbm-d3q19 is built using `make`, the platform-specific c/c++ compilers.
+lbm-d3q19 is built using `make`, the platform-specific C compiler.
 Execute the following commands from the root directory::
 
  make
