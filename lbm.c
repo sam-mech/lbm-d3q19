@@ -21,12 +21,12 @@ typedef struct {
 const int n = 3;
 
 // Grid dims
-const unsigned int nx = 4;
-const unsigned int ny = 6;
+const unsigned int nx = 3;
+const unsigned int ny = 4;
 const unsigned int nz = 2;
 
 // Grid cell width
-const Float dx = 0.1;
+const Float dx = 2.0;
 
 // Number of flow vectors in each cell
 const int m = 19;
@@ -36,17 +36,20 @@ const int m = 19;
 const Float dt = 1.0e-4;
 
 // Simulation end time
-const Float t_end = 10.1;
-//const Float t_end = 1.0;
+//const Float t_end = 2.0e-4;
+const Float t_end = 1.0;
 
 // Fluid dynamic viscosity
 const Float nu = 8.9e-4;
+//const Float nu = 8.9e-0;
 
 
 // Gravitational acceleration
-//const Float3 g = {0.0, 0.0, -10.0};
-const Float3 g = {0.0, 0.0, 0.0};
+const Float3 g = {0.0, 0.0, -10.0};
+//const Float3 g = {0.0, 0.0, 0.0};
 
+// Lattice speed of sound for D2Q9 and D3Q19 (1.0/sqrt(3.0))
+const Float c2_s = 1.0/1.7320508075688772;
 
 
 //// FUNCTION DEFINITIONS
@@ -64,9 +67,21 @@ Float dot(Float3 a, Float3 b)
     return a.x*b.x + a.y*b.y + a.z*b.z;
 }
 
-// Viscosity parameter
+// Relaxation parameter, linked to fluid dynamic viscosity
 Float tau(void) {
-    return (6.0*nu*dt/(dx*dx) + 1.0)/2.0;
+
+    //Float tau = (6.0*nu*dt/(dx*dx) + 1.0)/2.0;
+
+    Float tau = nu/c2_s + 0.5;
+    if (tau < 0.5) {
+        fprintf(stderr, "Error: For positive viscosity: tau >= 0.5, ");
+        fprintf(stderr, "but tau = %f.\n Increase the dynamic viscosity ", tau);
+        fprintf(stderr, "(nu).\n");
+        exit(1);
+    } else
+        return tau;
+    //Float c2_s = 1.0/sqrtf(3.0);  // for D2Q9 and D3Q19
+    //return nu/c2_s + 1.0/2.0;
 }
 
 // Get i-th value from cell x,y,z
@@ -153,20 +168,24 @@ void init_fluid(Float* f, Float* rho, Float3* v)
     }
 }
 
-// Equilibrium distribution along flow vector e
+// Equilibrium distribution along flow vector e,
+// Obtained from the local Maxwell-Boltzmann SPDF
+// He and Luo, 1997
 Float feq(
         Float rho,
         Float w,
         Float3 e,
         Float3 u)
 {
+    // Propagation speed on the lattice, squared
     Float c2 = dx/dt;
-    return rho*w * (1.0 + 3.0/c2*dot(e,u)
-            + 9.0/(2.0*c2*c2)*dot(e,u)*dot(e,u)
-            - 3.0/(2.0*c2)*dot(u,u)*dot(u,u));
+    return rho*w * (1.0 + 3.0*dot(e,u)/c2
+            + 9.0/2.0*dot(e,u)*dot(e,u)/(c2*c2)
+            - 3.0/2.0*dot(u,u)/c2);
 }
 
-// Bhatnagar-Gross-Kroop approximation collision operator
+// Bhatnagar-Gross-Kroop approximation collision operator,
+// Bhatnagar et al., 1954
 Float bgk(
         Float f,
         Float tau,
@@ -483,18 +502,19 @@ void print_v(Float3* v, FILE* stream)
 
 int main(int argc, char** argv)
 {
-    //printf("### Lattice-Boltzman D%dQ%d test ###\n", n, m);
+    printf("### Lattice-Boltzman D%dQ%d test ###\n", n, m);
 
 
     // Print parameter vals
-    //printf("Grid dims: nx = %d, ny = %d, nz = %d: %d cells\n",
-            //nx, ny, nz, ncells);
+    unsigned int ncells = nx*ny*nz;
+    printf("Grid dims: nx = %d, ny = %d, nz = %d: %d cells\n",
+            nx, ny, nz, ncells);
+    printf("tau = %f\n", tau());
 
     // Set cell flow vector values
     Float3 e[m]; set_e_values(e);
 
     // Particle distributions
-    unsigned int ncells = nx*ny*nz;
     Float* f = malloc(ncells*m*sizeof(Float));
     Float* f_new = malloc(ncells*m*sizeof(Float));
 
