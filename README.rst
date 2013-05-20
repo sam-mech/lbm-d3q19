@@ -23,7 +23,7 @@ copy, execute::
 
 Build and run instructions
 --------------------------
-lbm-d3q19 is built using `make`, the platform-specific c/c++ compilers.
+lbm-d3q19 is built using `make`, the platform-specific C compiler.
 Execute the following commands from the root directory::
 
  make
