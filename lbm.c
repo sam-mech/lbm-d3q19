@@ -3,7 +3,6 @@
 #include <math.h>
 
 // Courant kriterie for tidsskridt
-// Check for LBM stability criteria
 // No slip top og bund
 // Periodiske sider
 
@@ -63,6 +62,9 @@ const Float rho0 = 1.0;
 
 // Inital cell fluid velocity (dimensionless)
 const Float3 u0 = {0.0, 0.0, 0.0};
+
+// Courant criteria limit
+const Float C_max = 1.0;
 
 
 //// FUNCTION DEFINITIONS
@@ -254,6 +256,18 @@ Float3 find_u(
         u.y += f_i*e[i].y/rho;
         u.z += f_i*e[i].z/rho;
     }
+
+    // Check the Courant-Frederichs-Lewy condition
+    if ((u.x*dt/dx + u.y*dt/dx + u.z*dt/dx) > C_max) {
+        fprintf(stderr, "Error, the Courant-Friderichs-Lewy condition is not ");
+        fprintf(stderr, "satisfied.\nTry one or more of the following:\n");
+        fprintf(stderr, "- Decrease the timestep (dt)\n");
+        fprintf(stderr, "- Increase the cell size (dx)\n");
+        fprintf(stderr, "- Decrease the fluid viscosity (nu)\n");
+        fprintf(stderr, "- Decrease the fluid density (rho)\n");
+        exit(EXIT_FAILURE);
+    }
+
     return u;
 }
 
