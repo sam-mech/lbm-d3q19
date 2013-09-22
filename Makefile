@@ -1,4 +1,4 @@
-CFLAGS=-g -Wall -pg -O2
+CFLAGS=-g -Wall -pg -O2 -fopenmp
 LDLIBS=-lm
 BIN=lbm
 

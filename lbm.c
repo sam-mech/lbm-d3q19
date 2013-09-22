@@ -2,10 +2,6 @@
 #include <stdlib.h> // dynamic allocation
 #include <math.h>
 
-// Courant kriterie for tidsskridt
-// No slip top og bund
-// Periodiske sider
-
 // Floating point precision
 //typedef float Float;
 typedef double Float;
@@ -40,7 +36,7 @@ const int m = 19;
 // Time step length
 //const double dt = 1.0;
 const double dt = 1.0e-3;
-//const double dt = 0.01;
+//const double dt = 1.0e-6;
 
 // Simulation end time
 //const Float t_end = 1.5e-4;
@@ -250,6 +246,7 @@ Float3 find_u(
     Float3 u = {0.0, 0.0, 0.0};
     Float f_i;
     unsigned int i;
+#pragma omp parallel for private(f_i,u)
     for (i=0; i<m; i++) {
         f_i = f[idxi(x,y,z,i)];
         u.x += f_i*e[i].x/rho;
@@ -299,6 +296,7 @@ void collide(
                 u[idx(x,y,z)] = u_new;
 
                 // Find new f values by fluid particle collision
+//#pragma omp parallel for
                 for (i=0; i<m; i++) {
                     f[idxi(x,y,z,i)] =
                         bgk(f[idxi(x,y,z,i)], tau(), rho_new,
